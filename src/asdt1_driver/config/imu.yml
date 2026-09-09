@@ -1,0 +1,13 @@
+# IMU noise parameters as given by calibration with
+# allen_variance_ros tool
+
+#Accelerometer
+accelerometer_noise_density: 0.00018052546878345128 
+accelerometer_random_walk: 1.664544243520578e-05
+ 
+#Gyroscope
+gyroscope_noise_density: 0.0002535844551328174 
+gyroscope_random_walk: 6.150796878209679e-05 
+
+rostopic: '/asdt1_driver/imu' 
+update_rate: 100
