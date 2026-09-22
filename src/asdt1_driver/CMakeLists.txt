@@ -190,7 +190,6 @@ install(TARGETS ${TARGET_NAME}_component
   RUNTIME DESTINATION bin)
 
 install(DIRECTORY
-  launch
   config
   DESTINATION share/${PROJECT_NAME}
 )
