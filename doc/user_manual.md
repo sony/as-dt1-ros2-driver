@@ -6,9 +6,6 @@ The driver has been tested on ROS2 Humble and Jazzy.
 
 ## Overview
 
-There are two version of the package built for Humble and Jazzy respectively.
-The driver is available for Linux PC/x86 and Nvidia Jetson / ARM64.
-
 The package, named asdt1_ros2_driver, contains two ROS 2 nodes:
 
 - `asdt1_driver`: Main driver node for one AS-DT1 device.
