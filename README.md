@@ -6,7 +6,7 @@ ROS 2 driver for the **AS-DT1** LiDAR camera by Sony.
 
 This package provides a ROS 2 node that interfaces with the AS-DT1 LiDAR camera over USB. It handles device discovery, streaming, and publishes point cloud and IMU data to ROS 2 topics. Multiple cameras can be operated simultaneously in master/slave synchronisation mode.
 
-The driver has been built and tested on ROS 2 Humble and Jazzy on both x86 and ARM64 hosts. It currently requires AS-DT1 firmware version 1.01 or later.
+The driver has been built and tested on ROS 2 Humble, Jazzy and Lyrical on both x86 and ARM64 hosts. It currently requires AS-DT1 firmware version 1.01 or later.
 
 ### Key features
 

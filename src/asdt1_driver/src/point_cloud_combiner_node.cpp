@@ -9,9 +9,9 @@
 
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <sensor_msgs/msg/point_field.hpp>
-#include <tf2/LinearMath/Matrix3x3.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/exceptions.h>
+#include <tf2/LinearMath/Matrix3x3.hpp>
+#include <tf2/LinearMath/Quaternion.hpp>
+#include <tf2/exceptions.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
 
 #include <functional>

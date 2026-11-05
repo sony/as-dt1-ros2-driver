@@ -119,15 +119,15 @@ target_include_directories(${TARGET_NAME}_component PRIVATE ${CMAKE_CURRENT_SOUR
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 
-ament_target_dependencies(${TARGET_NAME}_component
-  rclcpp
-  rclcpp_components
-  ament_index_cpp
-  std_srvs
-  sensor_msgs
-  geometry_msgs
-  tf2
-  tf2_ros
+target_link_libraries(${TARGET_NAME}_component
+  rclcpp::rclcpp
+  rclcpp_components::component
+  ament_index_cpp::ament_index_cpp
+  ${std_srvs_TARGETS}
+  ${sensor_msgs_TARGETS}
+  ${geometry_msgs_TARGETS}
+  tf2::tf2
+  tf2_ros::tf2_ros
 )
 
 target_link_libraries(${TARGET_NAME}_component
@@ -165,14 +165,14 @@ target_include_directories(${TARGET_NAME}_component PRIVATE ${CMAKE_CURRENT_SOUR
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 
-ament_target_dependencies(${TARGET_NAME}_component
-  rclcpp
-  rclcpp_components
-  std_srvs
-  sensor_msgs
-  geometry_msgs
-  tf2
-  tf2_ros
+target_link_libraries(${TARGET_NAME}_component
+  rclcpp::rclcpp
+  rclcpp_components::component
+  ${std_srvs_TARGETS}
+  ${sensor_msgs_TARGETS}
+  ${geometry_msgs_TARGETS}
+  tf2::tf2
+  tf2_ros::tf2_ros
 )
 
 target_link_libraries(${TARGET_NAME}_component

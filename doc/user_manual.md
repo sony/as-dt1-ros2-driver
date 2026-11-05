@@ -2,7 +2,7 @@
 
 This document describes how to use the `asdt1_driver` ROS 2 node in a ROS2 environment.
 It assumes the code has been built and ROS2 is installed on the PC.
-The driver has been tested on ROS2 Humble and Jazzy.
+The driver has been tested on ROS2 Humble, Jazzy and Lyrical.
 
 ## Overview
 
