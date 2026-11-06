@@ -22,6 +22,6 @@ protected:
 private:
     void read_serial_point_cloud();
 
-    std::vector<Eigen::Vector3f> _point_cloud;
+    std::vector<Vector3f> _point_cloud;
     std::vector<uint8_t> _receive_buf;
 };

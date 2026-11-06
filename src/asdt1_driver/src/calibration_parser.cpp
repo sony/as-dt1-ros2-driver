@@ -103,7 +103,7 @@ void calibration_parser::load(const std::string& filepath)
                 }
                 for (int col = 0; col < 3; ++col)
                 {
-                    calib.extrinsics.get_rotation()(row, col) = R[row][col].as<float>();
+                    calib.extrinsics.rotation[row][col] = R[row][col].as<float>();
                 }
             }
 
@@ -111,7 +111,7 @@ void calibration_parser::load(const std::string& filepath)
             if (!T.IsSequence() || T.size() != 3) { throw std::runtime_error("translation_vector must have 3 values"); }
             for (int i = 0; i < 3; ++i)
             {
-                calib.extrinsics.get_translation()(i) = T[i].as<float>();
+                calib.extrinsics.translation[i] = T[i].as<float>();
             }
 
             _cameras.emplace_back(std::move(calib));

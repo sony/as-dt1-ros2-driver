@@ -93,7 +93,6 @@ find_package(yaml-cpp REQUIRED)
 include(cmake/utility_functions.cmake)
 
 include(cmake/configure_serial.cmake)
-include(cmake/configure_eigen.cmake)
 
 ## Define target asdt1_driver
 ## -----------------------------------
@@ -132,7 +131,6 @@ target_link_libraries(${TARGET_NAME}_component
 
 target_link_libraries(${TARGET_NAME}_component
   serial
-  Eigen3::Eigen
   yaml-cpp
 )
 
@@ -173,10 +171,6 @@ target_link_libraries(${TARGET_NAME}_component
   ${geometry_msgs_TARGETS}
   tf2::tf2
   tf2_ros::tf2_ros
-)
-
-target_link_libraries(${TARGET_NAME}_component
-  Eigen3::Eigen
 )
 
 rclcpp_components_register_node(${TARGET_NAME}_component

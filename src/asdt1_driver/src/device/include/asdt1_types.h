@@ -5,15 +5,24 @@
  */
 #pragma once
 
-#include <Eigen/Core>
-
+#include <array>
 #include <cstdint>
 #include <functional>
+#include <string>
 #include <variant>
 #include <vector>
 
-using Vector3f = Eigen::Vector3f;
-using Vector6f = Eigen::Matrix<float, 6, 1>;
+struct Vector3f
+{
+    float x;
+    float y;
+    float z;
+};
+static_assert(sizeof(Vector3f) == 3 * sizeof(float), "Vector3f must be tightly packed");
+
+// x, y, z, intensity, time, ring
+using Vector6f = std::array<float, 6>;
+static_assert(sizeof(Vector6f) == 6 * sizeof(float), "Vector6f must be tightly packed");
 
 enum class sync_mode
 {

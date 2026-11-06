@@ -14,12 +14,12 @@
 
 #include <ament_index_cpp/get_package_share_directory.hpp>
 #include <rclcpp_components/register_node_macro.hpp>
+#include <tf2/LinearMath/Matrix3x3.hpp>
+#include <tf2/LinearMath/Quaternion.hpp>
 
 #include <fstream>
 #include <regex>
 #include <string>
-
-#include <Eigen/Dense>
 
 static float constexpr mm_to_m = 0.001f;
 
@@ -221,16 +221,19 @@ void ASDT1_Driver::on_cam_connection(connect_status status)
         ts.header.frame_id = _parent_frame_id;
         ts.child_frame_id = _depth_frame_id;
 
-        const auto translation = calibration.extrinsics.get_translation() * mm_to_m;
-        ts.transform.translation.x = translation.x();
-        ts.transform.translation.y = translation.y();
-        ts.transform.translation.z = translation.z();
+        const auto& t = calibration.extrinsics.translation;
+        ts.transform.translation.x = t[0] * mm_to_m;
+        ts.transform.translation.y = t[1] * mm_to_m;
+        ts.transform.translation.z = t[2] * mm_to_m;
 
-        const Eigen::Quaternionf eig_q(calibration.extrinsics.extrinsic_matrix.block<3, 3>(0, 0));
-        ts.transform.rotation.w = eig_q.w();
-        ts.transform.rotation.x = eig_q.x();
-        ts.transform.rotation.y = eig_q.y();
-        ts.transform.rotation.z = eig_q.z();
+        const auto& r = calibration.extrinsics.rotation;
+        const tf2::Matrix3x3 rot(r[0][0], r[0][1], r[0][2], r[1][0], r[1][1], r[1][2], r[2][0], r[2][1], r[2][2]);
+        tf2::Quaternion q;
+        rot.getRotation(q);
+        ts.transform.rotation.w = q.w();
+        ts.transform.rotation.x = q.x();
+        ts.transform.rotation.y = q.y();
+        ts.transform.rotation.z = q.z();
 
         _tf_broadcaster->sendTransform(ts);
     }
@@ -266,10 +269,10 @@ void ASDT1_Driver::on_point_cloud(uint64_t frame_ts, const points_data& points)
             msg.width = point_data.size();
             msg.is_bigendian = false;
 
-            if constexpr (std::is_same_v<T, std::vector<Eigen::Vector3f>>)
+            if constexpr (std::is_same_v<T, std::vector<Vector3f>>)
             {
                 msg.fields = _msg_fields;
-                msg.point_step = sizeof(Eigen::Vector3f);
+                msg.point_step = sizeof(Vector3f);
                 msg.row_step = msg.point_step * msg.width;
                 std::size_t byte_count = msg.row_step * msg.height;
                 msg.data.resize(byte_count);
@@ -329,13 +332,13 @@ void ASDT1_Driver::on_imu_samples(const std::vector<imu_sample>& imu_samples)
 
             imu_msg.angular_velocity_covariance = {6.43051e-06, 0.0, 0.0, 0.0, 6.43051e-06, 0.0, 0.0, 0.0, 6.43051e-06};
 
-            imu_msg.angular_velocity.x = sample.gyro.x();
-            imu_msg.angular_velocity.y = sample.gyro.y();
-            imu_msg.angular_velocity.z = sample.gyro.z();
+            imu_msg.angular_velocity.x = sample.gyro.x;
+            imu_msg.angular_velocity.y = sample.gyro.y;
+            imu_msg.angular_velocity.z = sample.gyro.z;
 
-            imu_msg.linear_acceleration.x = sample.accel.x();
-            imu_msg.linear_acceleration.y = sample.accel.y();
-            imu_msg.linear_acceleration.z = sample.accel.z();
+            imu_msg.linear_acceleration.x = sample.accel.x;
+            imu_msg.linear_acceleration.y = sample.accel.y;
+            imu_msg.linear_acceleration.z = sample.accel.z;
 
             _imu_publisher->publish(imu_msg);
         }

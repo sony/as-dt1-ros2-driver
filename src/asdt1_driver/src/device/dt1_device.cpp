@@ -12,6 +12,7 @@
 #include "logger.h"
 
 #include <cinttypes>
+#include <cmath>
 #include <cstdio>
 #include <sstream>
 #include <stdexcept>

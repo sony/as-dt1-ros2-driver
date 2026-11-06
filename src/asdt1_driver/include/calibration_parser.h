@@ -7,19 +7,18 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <array>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <vector>
-#include <Eigen/Dense>
 
 struct camera_extrinsics
 {
-    Eigen::Matrix4f extrinsic_matrix = Eigen::Matrix4f::Identity();
-
-    Eigen::Block<Eigen::Matrix4f, 3, 3> get_rotation() { return extrinsic_matrix.block<3, 3>(0, 0); }
-    Eigen::Block<Eigen::Matrix4f, 3, 1> get_translation() { return extrinsic_matrix.block<3, 1>(0, 3); }
-    Eigen::Block<const Eigen::Matrix4f, 3, 1> get_translation() const { return extrinsic_matrix.block<3, 1>(0, 3); }
+    // Row-major 3x3 rotation matrix
+    std::array<std::array<float, 3>, 3> rotation = {{{1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f}}};
+    // Translation in millimetres
+    std::array<float, 3> translation = {0.f, 0.f, 0.f};
 };
 
 struct camera_calibration

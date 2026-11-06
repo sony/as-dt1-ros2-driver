@@ -61,14 +61,7 @@ For detailed information about the AS-DT1 communication protocol and data layout
 
 ## Dependencies
 
-Non-ROS dependencies (install before building):
-
-```bash
-# Eigen3
-sudo apt install libeigen3-dev
-```
-
-The `serial` library is bundled as a vendored dependency and requires no separate installation.
+There are no non-ROS dependencies to install. The `serial` library is bundled as a vendored dependency and requires no separate installation.
 
 ## License
 

@@ -15,7 +15,7 @@
 static constexpr int line_order[] = {0, 2, 12, 14, 4, 6, 16, 18, 8, 10, 20, 22,
                                      1, 3, 13, 15, 5, 7, 17, 19, 9, 11, 21, 23};
 
-static void extract_first_peak(const std::vector<uint8_t>& data, size_t offset, Eigen::Vector3f& peak1)
+static void extract_first_peak(const std::vector<uint8_t>& data, size_t offset, Vector3f& peak1)
 {
     if (offset + 15 > data.size()) { throw std::out_of_range("Not enough data to extract 15 bytes"); }
 
@@ -27,12 +27,13 @@ static void extract_first_peak(const std::vector<uint8_t>& data, size_t offset, 
     if (y1 & 0x80000) { y1 = 0 - (0x100000 - y1); }
     if (z1 & 0x80000) { z1 = 0 - (0x100000 - z1); }
 
-    peak1 = {static_cast<float>(-y1) / 1000.f, static_cast<float>(x1) / 1000.f, static_cast<float>(z1) / 1000.f};
-    peak1 *= 0.25f;
+    constexpr float scale = 0.25f / 1000.f;
+    peak1 = {static_cast<float>(-y1) * scale, static_cast<float>(x1) * scale, static_cast<float>(z1) * scale};
 
-    if (peak1 == Vector3f::Zero())
+    if (x1 == 0 && y1 == 0 && z1 == 0)
     {
-        peak1 = Vector3f::Constant(std::numeric_limits<float>::quiet_NaN());
+        constexpr float nan = std::numeric_limits<float>::quiet_NaN();
+        peak1 = {nan, nan, nan};
     }
 }
 

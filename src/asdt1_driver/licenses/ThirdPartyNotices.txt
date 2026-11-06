@@ -9,8 +9,3 @@ Component: Serial
 License: MIT
 Copyright © 2012 William Woodall, John Harrison
 License text: licenses/MIT.txt
-
---------------------------------------------------
-Component: Eigen3
-License: MPL License, Version 2.0
-License text: licenses/MPL-2.0.txt

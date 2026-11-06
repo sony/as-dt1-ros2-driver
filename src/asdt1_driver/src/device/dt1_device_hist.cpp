@@ -250,7 +250,7 @@ void dt1_device_hist::unpack_hist_frame(const hist_frame_data* hist_frame)
    
                 if (z_f > 0.2f)
                 {
-                    _points_xyzitr[dest_idx++] = Vector6f(-y_f, x_f, z_f, height_f, ts, ring);
+                    _points_xyzitr[dest_idx++] = Vector6f{-y_f, x_f, z_f, height_f, ts, static_cast<float>(ring)};
                 }
             }
             else

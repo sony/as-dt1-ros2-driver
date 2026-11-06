@@ -9,7 +9,6 @@
 #include "connect_status.h"
 #include "hist_frame.h"
 
-#include <Eigen/Core>
 #include <linux/media.h>
 #include <vector>
 #include <optional>

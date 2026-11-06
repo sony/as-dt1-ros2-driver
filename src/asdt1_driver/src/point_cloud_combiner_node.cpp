@@ -143,11 +143,11 @@ void PointCloudCombiner::try_publish_combined_imu()
         if (age_ms > IMU_SYNC_TOLERANCE_MS) { return; }
     }
 
-    Eigen::Vector3d angular_velocity = Eigen::Vector3d::Zero();
-    Eigen::Vector3d linear_acceleration = Eigen::Vector3d::Zero();
+    tf2::Vector3 angular_velocity{0.0, 0.0, 0.0};
+    tf2::Vector3 linear_acceleration{0.0, 0.0, 0.0};
     for (std::size_t i = 0; i < _latest_imus.size(); ++i)
     {
-        Eigen::Vector3d av, la;
+        tf2::Vector3 av, la;
         if (!transform_imu_vector(i, _latest_imus[i]->angular_velocity, av) ||
             !transform_imu_vector(i, _latest_imus[i]->linear_acceleration, la))
         {
@@ -248,11 +248,9 @@ bool PointCloudCombiner::get_transform_to_target_frame(const std::size_t input_i
     const auto& translation = tf_msg.transform.translation;
     const auto& rotation = tf_msg.transform.rotation;
     tf2::Quaternion q(rotation.x, rotation.y, rotation.z, rotation.w);
-    tf2::Matrix3x3 rot(q);
 
-    transform.translation = Eigen::Vector3d(translation.x, translation.y, translation.z);
-    transform.rotation << rot[0][0], rot[0][1], rot[0][2], rot[1][0], rot[1][1], rot[1][2], rot[2][0], rot[2][1],
-        rot[2][2];
+    transform.translation = tf2::Vector3(translation.x, translation.y, translation.z);
+    transform.rotation = tf2::Matrix3x3(q);
 
     {
         std::scoped_lock lock(_target_transforms_mutex);
@@ -296,7 +294,7 @@ bool PointCloudCombiner::transform_to_target_frame(const std::size_t input_index
         std::memcpy(&y, &out_cloud.data[base + offsets->y], sizeof(float));
         std::memcpy(&z, &out_cloud.data[base + offsets->z], sizeof(float));
 
-        const Eigen::Vector3d transformed = transform.rotation * Eigen::Vector3d(x, y, z) + transform.translation;
+        const tf2::Vector3 transformed = transform.rotation * tf2::Vector3(x, y, z) + transform.translation;
         const float xt = static_cast<float>(transformed.x());
         const float yt = static_cast<float>(transformed.y());
         const float zt = static_cast<float>(transformed.z());
@@ -320,9 +318,9 @@ bool PointCloudCombiner::transform_to_target_frame(const std::size_t input_index
 }
 
 bool PointCloudCombiner::transform_imu_vector(const std::size_t imu_index, const geometry_msgs::msg::Vector3& vector,
-                                              Eigen::Vector3d& transformed)
+                                              tf2::Vector3& transformed)
 {
-    const Eigen::Vector3d source(vector.x, vector.y, vector.z);
+    const tf2::Vector3 source(vector.x, vector.y, vector.z);
     std::optional<target_transform> transform;
     {
         std::scoped_lock lock(_target_transforms_mutex);

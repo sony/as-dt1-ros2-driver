@@ -5,11 +5,12 @@
  */
 #pragma once
 
-#include <Eigen/Dense>
 #include <geometry_msgs/msg/vector3.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/point_cloud2.hpp>
+#include <tf2/LinearMath/Matrix3x3.hpp>
+#include <tf2/LinearMath/Vector3.hpp>
 #include <tf2_ros/buffer.hpp>
 #include <tf2_ros/transform_listener.hpp>
 #include <std_srvs/srv/trigger.hpp>
@@ -45,8 +46,8 @@ private:
 
     struct target_transform
     {
-        Eigen::Matrix3d rotation = Eigen::Matrix3d::Identity();
-        Eigen::Vector3d translation = Eigen::Vector3d::Zero();
+        tf2::Matrix3x3 rotation = tf2::Matrix3x3::getIdentity();
+        tf2::Vector3 translation{0.0, 0.0, 0.0};
     };
 
     static std::optional<offsets> find_offsets(const PointCloudMsg& cloud);
@@ -55,7 +56,7 @@ private:
     bool transform_to_target_frame(std::size_t input_index, const PointCloudMsg& in_cloud, PointCloudMsg& out_cloud,
                                    int& ring_offset);
     bool transform_imu_vector(std::size_t imu_index, const geometry_msgs::msg::Vector3& vector,
-                              Eigen::Vector3d& transformed);
+                              tf2::Vector3& transformed);
     void on_point_cloud(std::size_t index, PointCloudConstPtr msg);
     void on_imu(std::size_t index, ImuConstPtr msg);
     void try_publish_combined();
