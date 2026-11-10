@@ -27,7 +27,7 @@ Restart for the change to take effect.
 Source the workspace.
 
 ```bash
-source /opt/ros/humble/setup.bash
+source /opt/ros/<distro>/setup.bash  # e.g. humble, jazzy or lyrical
 source install/setup.bash
 ```
 
@@ -37,7 +37,7 @@ If an AS-DT1 has not been connected to host when starting the driver, it will co
 
 ### Start without specifying a serial number
 
-If `serial_number` is left empty, the node will scan serial ports and connect to the first AS-DT1 it finds.
+If `serial_number` is not set (or set to `0` or less), the node will scan serial ports and connect to the first AS-DT1 it finds.
 
 ```bash
 ros2 run asdt1_ros2_driver asdt1_driver
@@ -46,7 +46,7 @@ ros2 run asdt1_ros2_driver asdt1_driver
 Equivalent explicit form:
 
 ```bash
-ros2 run asdt1_ros2_driver asdt1_driver --ros-args -p serial_number:=""
+ros2 run asdt1_ros2_driver asdt1_driver --ros-args -p serial_number:=-1
 ```
 
 ### Start with a specific serial number
@@ -68,7 +68,7 @@ ros2 run asdt1_ros2_driver asdt1_driver --ros-args \
 
 ### Start multiple cameras with the provided launch file
 
-The package includes an example launch file [`asdt1_4cams.launch.py`](/Users/Daniel.Linaker/repos/ros2/asdt1_ros2_workspace/src/asdt1_ros/src/asdt1_driver/launch/asdt1_4cams.launch.py), which starts four driver instances with fixed serial numbers and namespaces:
+The package includes an example launch file [`asdt1_4cams.launch.py`](../src/asdt1_driver/launch/asdt1_4cams.launch.py), which starts one driver instance per camera in the calibration file, plus a point cloud combiner. With the default `calibration_example.yml` this gives four cameras with these namespaces:
 
 - `asdt1_top_left`
 - `asdt1_top_right`
@@ -84,7 +84,7 @@ ros2 launch asdt1_ros2_driver asdt1_4cams.launch.py
 Optionally override the calibration file:
 
 ```bash
-ros2 launch asdt1_driver asdt1_4cams.launch.py \
+ros2 launch asdt1_ros2_driver asdt1_4cams.launch.py \
   calibration_file:=/absolute/path/to/calibration.yml
 ```
 <div class="page"></div>
@@ -96,10 +96,10 @@ ros2 launch asdt1_driver asdt1_4cams.launch.py \
 | Parameter | Type | Default | Description |
 | --- | --- | --- | --- |
 | `calibration_file` | string | `config/calibration.yml` | YAML file with camera extrinsics and optional frame IDs. |
-| `serial_number` | string | `""` | Hardware serial to connect to. Empty means "connect to any AS-DT1 found". |
-| `output_format` | string | `XYZ` | Output format for the point_cloud node.
+| `serial_number` | integer | `-1` | Hardware serial to connect to. `0` or less means "connect to any AS-DT1 found". |
+| `output_format` | string | `XYZ` | Point cloud format published on the `point_cloud` topic: `XYZ` or `XYZITR`. |
 | `mode` | string | `30MSTD` | Sensor mode. |
-| `framerate` | integer | `30` | Requested frame rate. Valid range in code is `0` to `30`. |
+| `framerate` | integer | `30` | Frame rate in Hz, from `1` to `30`. |
 | `sync_mode` | string | `none` | Synchronization mode: `none`, `master`, or `slave`. |
 
 
@@ -108,19 +108,19 @@ ros2 launch asdt1_driver asdt1_4cams.launch.py \
 Use `output_format` to choose which point cloud payload the driver publishes:
 
 - `XYZ`: `x`, `y`, `z` (default)
- - xyx: The coordinates in m.
+ - xyz: The coordinates in m.
 - `XYZITR`: `x`, `y`, `z`, `intensity`, `time`, `ring`
- - xyz: The coordintaes in m.
+ - xyz: The coordinates in m.
  - intensity: Intensity value for every dot.
  - time: Time offset from start of frame timestamp in ms for every dot.
  - ring: Horizontal line number for the dot.
 
-Not that setting XYZITR mode means the camera is set in histogram output mode which increase output data rate and power consumption and should hence only be used if the additional output data is needed.
+Note that setting XYZITR mode means the camera is set in histogram output mode, which increases output data rate and power consumption and should hence only be used if the additional output data is needed.
 
 Example:
 
 ```bash
-ros2 run asdt1_driver asdt1_driver --ros-args -p output_format:=XYZITR
+ros2 run asdt1_ros2_driver asdt1_driver --ros-args -p output_format:=XYZITR
 ```
 <div class="page"></div>
 
@@ -140,7 +140,7 @@ Mode matching is case-insensitive in the driver.
 
 ### Runtime parameter changes
 
-The node installs a parameter callback after the device connects.
+The node installs a parameter callback at startup.
 
 - `calibration_file` cannot be changed at runtime.
 - `serial_number` cannot be changed at runtime.
@@ -184,7 +184,7 @@ Important naming note:
 - Message type: `sensor_msgs/msg/PointCloud2`
 - For `output_format:=XYZ`, the fields are `x`, `y`, `z`
 - For `output_format:=XYZITR`, the fields are `x`, `y`, `z`, `intensity`, `time`, `ring`
-- Coordinates are publisd as are published as `FLOAT32`
+- Coordinates are published as `FLOAT32`
 - `intensity`, `time` are published as `UINT32`
 - `ring` is published as `UINT16`
 - Frame ID comes from calibration file if available; otherwise defaults to `asdt1_optical`
@@ -195,7 +195,8 @@ Important naming note:
 - Message type: `sensor_msgs/msg/Imu`
 - Frame ID matches the depth frame
 - `orientation` is not estimated by the driver
-- `orientation_covariance[0]`, `angular_velocity_covariance[0]`, and `linear_acceleration_covariance[0]` are set to `-1.0` to indicate unavailable covariance estimates
+- `orientation_covariance[0]` is set to `-1.0` to indicate that orientation is not available
+- `angular_velocity_covariance` and `linear_acceleration_covariance` are diagonal matrices with fixed variances (`6.43051e-06` and `3.25895e-06`), derived from the noise densities in `config/imu.yml`
 
 <div class="page"></div>
 
@@ -222,11 +223,12 @@ The node exposes these services, all using `std_srvs/srv/Trigger`:
 | `get_device_info` | `std_srvs/srv/Trigger` | Returns `hw_id`, device version, and current sync mode in the response message |
 | `start_streaming` | `std_srvs/srv/Trigger` | Starts streaming |
 | `stop_streaming` | `std_srvs/srv/Trigger` | Stops streaming |
+| `get_licenses` | `std_srvs/srv/Trigger` | Returns license information for the driver and its third-party components |
 
 Naming note:
 
-- Without a namespace, these resolve to `/reboot`, `/get_driver_version`, `/get_device_info`, `/start_streaming`, and `/stop_streaming`.
-- With namespace `asdt1_top_left`, they resolve to `/asdt1_top_left/reboot`, `/asdt1_top_left/get_driver_version`, `/asdt1_top_left/get_device_info`, `/asdt1_top_left/start_streaming`, and `/asdt1_top_left/stop_streaming`.
+- Without a namespace, these resolve to `/reboot`, `/get_driver_version`, `/get_device_info`, `/start_streaming`, `/stop_streaming`, and `/get_licenses`.
+- With namespace `asdt1_top_left`, they resolve to `/asdt1_top_left/reboot`, `/asdt1_top_left/get_driver_version`, `/asdt1_top_left/get_device_info`, `/asdt1_top_left/start_streaming`, `/asdt1_top_left/stop_streaming`, and `/asdt1_top_left/get_licenses`.
 
 ### Service examples
 
@@ -240,7 +242,7 @@ ros2 service call /start_streaming std_srvs/srv/Trigger
 ros2 service call /reboot std_srvs/srv/Trigger
 ```
 
-<div class="page">
+<div class="page"></div>
 
 Namespaced camera example:
 
@@ -251,14 +253,18 @@ ros2 service call /asdt1_top_left/get_device_info std_srvs/srv/Trigger
 
 ## Calibration File Behavior
 
-The node loads the calibration file at startup and looks for a `cameras` list. For the connected hardware ID it can use:
+The node loads the calibration file at startup and looks for a `cameras` list. Each entry has these fields:
 
-- `id`
-- `description`
-- `frame_id`
-- `parent_frame_id`
-- `extrinsics.rotation_matrix`
-- `extrinsics.translation_vector`
+| Field | Required | Description |
+| --- | --- | --- |
+| `id` | yes | Hardware serial number of the camera |
+| `extrinsics.rotation_matrix` | yes | 3x3 rotation matrix |
+| `extrinsics.translation_vector` | yes | Translation vector with 3 values, in millimeters |
+| `description` | no | Human-readable name of the camera |
+| `frame_id` | no | Child frame ID; can also be given as `extrinsics.frame_id` |
+| `parent_frame_id` | no | Parent frame ID; can also be given as `extrinsics.parent_frame_id` |
+
+An entry with a missing or malformed required field is skipped with a warning, and the camera then falls back to the defaults below.
 
 If no matching calibration entry is found for the hardware ID:
 
@@ -303,20 +309,22 @@ To view the point cloud in RViz2:
 3. Add a `PointCloud2` display.
 4. Select the point cloud topic, for example `/asdt1_driver/point_cloud`.
 5. Set the fixed frame to the depth frame, usually `asdt1_optical`, unless your calibration file provides another frame ID.
-6. Change The QoS/Reliability Policy setting for the topic to `Best effort`.
+6. Change the QoS/Reliability Policy setting for the topic to `Best effort`.
 
 ## Related Utility Node
 
-The package also contains `point_cloud_combiner`, which can combine several point cloud topics into one output cloud. Its parameters are:
+The package also contains `point_cloud_combiner`, which can combine several point cloud and IMU topics into one output cloud and one IMU stream. Its parameters are:
 
-| Parameter | Default |
-| --- | --- |
-| `input_topics` | `["point_cloud1", "point_cloud2", "point_cloud3", "point_cloud4"]` |
-| `output_topic` | `combined_point_cloud` |
-| `target_frame` | `camera_system_optical` |
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `input_topics` | `[]` | Point cloud topics to combine. Must be set; the node logs an error and creates no subscriptions if it is empty. |
+| `imu_topics` | `[]` | IMU topics to combine. |
+| `output_topic` | `combined_point_cloud` | Combined point cloud topic. |
+| `output_imu_topic` | `combined_imu` | Combined IMU topic. |
+| `target_frame` | `base_link` | Frame the clouds are transformed into before combining. |
 
 This node is separate from the AS-DT1 hardware driver and is optional.
 
-The resulting combined point cloud will be best aligned if the cameras are HW synchrnized and master/slave configuration has been set up in the calibraton file.
+The resulting combined point cloud will be best aligned if the cameras are HW synchronized and master/slave configuration has been set up in the calibration file.
 
-Timestamp for the combined point cloud will be set to the timestamps from the first camera in the calibration file.
+Timestamp for the combined point cloud will be set to the timestamp from the first topic in `input_topics`. The provided launch file lists the topics in the same order as the cameras in the calibration file.

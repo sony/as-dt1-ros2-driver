@@ -185,6 +185,7 @@ install(TARGETS ${TARGET_NAME}_component
 
 install(DIRECTORY
   config
+  launch
   DESTINATION share/${PROJECT_NAME}
 )
 
