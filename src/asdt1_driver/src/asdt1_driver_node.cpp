@@ -22,6 +22,9 @@
 #include <string>
 
 static float constexpr mm_to_m = 0.001f;
+static int constexpr min_framerate = 1;
+static int constexpr max_framerate = 30;
+static int constexpr default_framerate = 30;
 
 static std::string get_driver_version()
 {
@@ -63,7 +66,7 @@ ASDT1_Driver::ASDT1_Driver(const rclcpp::NodeOptions& options) : Node("asdt1_dri
     declare_parameter<std::string>("calibration_file", "config/calibration.yml");
     declare_parameter<int>("serial_number", -1);
     declare_parameter<std::string>("mode", "30MSTD");
-    declare_parameter<int>("framerate", 30);
+    declare_parameter<int>("framerate", default_framerate);
     declare_parameter<std::string>("sync_mode", "none");
     declare_parameter<std::string>("output_format", "XYZ");
 
@@ -94,6 +97,12 @@ ASDT1_Driver::ASDT1_Driver(const rclcpp::NodeOptions& options) : Node("asdt1_dri
 
     // Frame rate
     int framerate = static_cast<int>(get_parameter("framerate").as_int());
+    if (framerate < min_framerate || framerate > max_framerate)
+    {
+        RCLCPP_WARN(this->get_logger(), "Invalid framerate %d, must be %d to %d. Defaulting to %d", framerate,
+                    min_framerate, max_framerate, default_framerate);
+        framerate = default_framerate;
+    }
     _dt1_device->set_frame_rate(framerate);
 
     // Sync mode
@@ -393,10 +402,11 @@ rcl_interfaces::msg::SetParametersResult ASDT1_Driver::on_parameters_set(
                 return result;
             }
             int new_framerate = static_cast<int>(parameter.as_int());
-            if (new_framerate < 0 || new_framerate > 30)
+            if (new_framerate < min_framerate || new_framerate > max_framerate)
             {
                 result.successful = false;
-                result.reason = "Parameter 'framerate' must be >= 0";
+                result.reason = "Parameter 'framerate' must be " + std::to_string(min_framerate) + " to " +
+                                std::to_string(max_framerate);
                 return result;
             }
             _dt1_device->set_frame_rate(new_framerate);
